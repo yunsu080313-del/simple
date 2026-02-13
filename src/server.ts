@@ -102,12 +102,12 @@ app.post('/upload', (req, res) => {
           };
 
           const [ttsResponse] = await textToSpeechClient.synthesizeSpeech(ttsRequest);
-          const translatedAudioPath = path.join('temp', `${path.parse(req.file.filename).name}-${targetLanguage}.mp3`);
+          const translatedAudioPath = path.join('temp', `${path.parse(req.file!.filename).name}-${targetLanguage}.mp3`);
           fs.writeFileSync(translatedAudioPath, ttsResponse.audioContent as Uint8Array, 'binary');
           console.log(`Translated audio saved to: ${translatedAudioPath}`);
 
           // Merge translated audio with original video
-          const dubbedVideoPath = path.join('output', `${path.parse(req.file.filename).name}-dubbed-${targetLanguage}.mp4`);
+          const dubbedVideoPath = path.join('output', `${path.parse(req.file!.filename).name}-dubbed-${targetLanguage}.mp4`);
           ffmpeg(videoPath)
             .addInput(translatedAudioPath)
             .outputOptions('-c:v copy') // Copy video stream
