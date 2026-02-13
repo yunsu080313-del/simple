@@ -26,7 +26,7 @@ const upload = multer({
 });
 
 // Serve the frontend
-app.use(express.static(path.join(__dirname, '../frontend/dist')));
+app.use(express.static(path.join(__dirname, '../../frontend/dist')));
 // app.use(express.json()); // Enable JSON body parsing for API requests - Temporarily disabled for debugging req.file
 
 // Instantiates clients
@@ -139,7 +139,7 @@ app.post('/upload', (req, res) => {
 });
 
 // Serve static files from the 'output' directory as well, so the client can access the dubbed video
-app.use('/output', express.static(path.join(__dirname, '../output')));
+app.use('/output', express.static(path.join(__dirname, '../../output')));
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
