@@ -1,0 +1,9 @@
+# IDE files
+.vscode/
+.idx/
+
+# Cloned repo
+simple/
+
+# Dependencies
+node_modules/

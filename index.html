@@ -1,14 +1,39 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hello World</title>
-  <link href='/style.css' rel='stylesheet'>
+  <title>AI Video Dubbing</title>
 </head>
 <body>
-  <h1>Hello, world!</h1>
-  <button onclick="console.log('hello');">Press me</button>
-  <script defer type="text/javascript" src="/main.js"></script>
+  <h2>영상 더빙 테스트</h2>
+
+  <input type="file" id="videoInput" />
+  <select id="lang">
+    <option value="ko">한국어</option>
+    <option value="en">English</option>
+    <option value="ja">日本語</option>
+  </select>
+
+  <button onclick="upload()">더빙 시작</button>
+
+  <video id="result" controls style="width:400px;"></video>
+
+<script>
+async function upload() {
+  const file = document.getElementById("videoInput").files[0];
+  const lang = document.getElementById("lang").value;
+
+  const formData = new FormData();
+  formData.append("video", file);
+  formData.append("lang", lang);
+
+  const res = await fetch("/api/dub", {
+    method: "POST",
+    body: formData
+  });
+
+  const blob = await res.blob();
+  document.getElementById("result").src = URL.createObjectURL(blob);
+}
+</script>
 </body>
 </html>
