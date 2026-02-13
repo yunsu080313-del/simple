@@ -50,56 +50,65 @@ function App() {
   };
 
   return (
-    <div className="container mt-5">
-      <h1 className="mb-4">Video Dubber</h1>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label htmlFor="video" className="form-label">
-            Upload Video
-          </label>
-          <input
-            type="file"
-            className="form-control"
-            id="video"
-            accept="video/*"
-            onChange={handleFileChange}
-          />
-        </div>
-        <div className="mb-3">
-          <label htmlFor="language" className="form-label">
-            Select Language
-          </label>
-          <select
-            className="form-select"
-            id="language"
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-          >
-            <option value="en">English</option>
-            <option value="es">Spanish</option>
-            <option value="fr">French</option>
-            <option value="de">German</option>
-            <option value="ko">Korean</option>
-          </select>
-        </div>
-        <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? 'Dubbing...' : 'Dub Video'}
-        </button>
-      </form>
+    <div className="d-flex flex-column align-items-center justify-content-center min-vh-100 bg-light">
+      <div className="card p-4 shadow-lg" style={{ maxWidth: '600px', width: '100%' }}>
+        <h1 className="mb-4 text-center">Video Dubber</h1>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <label htmlFor="video" className="form-label">
+              Upload Video
+            </label>
+            <input
+              type="file"
+              className="form-control"
+              id="video"
+              accept="video/*"
+              onChange={handleFileChange}
+            />
+          </div>
+          <div className="mb-3">
+            <label htmlFor="language" className="form-label">
+              Select Language
+            </label>
+            <select
+              className="form-select"
+              id="language"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+            >
+              <option value="en">English</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="ko">Korean</option>
+            </select>
+          </div>
+          <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+            {loading ? (
+              <>
+                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span className="ms-2">Dubbing...</span>
+              </>
+            ) : (
+              'Dub Video'
+            )}
+          </button>
+        </form>
 
-      {error && <div className="alert alert-danger mt-3">{error}</div>}
+        {error && <div className="alert alert-danger mt-3">{error}</div>}
 
-      {dubbedVideoUrl && (
-        <div className="mt-4">
-          <h2>Dubbed Video</h2>
-          <video controls src={dubbedVideoUrl} style={{ maxWidth: '100%' }}></video>
-          <p className="mt-2">
-            Download: <a href={dubbedVideoUrl} download>
-              {dubbedVideoUrl.split('/').pop()}
-            </a>
-          </p>
-        </div>
-      )}
+        {dubbedVideoUrl && (
+          <div className="mt-4 text-center">
+            <h2>Dubbed Video</h2>
+            <video controls src={dubbedVideoUrl} className="w-100" style={{ maxWidth: '100%' }}></video>
+            <p className="mt-2">
+              Download: <a href={dubbedVideoUrl} download>
+                {dubbedVideoUrl.split('/').pop()}
+              </a>
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
