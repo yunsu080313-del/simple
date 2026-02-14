@@ -62,6 +62,8 @@ app.post('/upload', (req, res) => {
     const audioOutputPath = path.join('temp', `${path.parse(req.file.filename).name}.mp3`);
     const targetLanguage = req.body.lang; // Get target language from frontend
 
+    fs.mkdirSync('temp', { recursive: true }); // Ensure temp directory exists
+
     ffmpeg(videoPath)
       .output(audioOutputPath)
       .on('end', async () => {
