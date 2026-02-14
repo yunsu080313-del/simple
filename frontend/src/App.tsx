@@ -30,7 +30,7 @@ function App() {
     formData.append('lang', language);
 
     try {
-      const response = await fetch('/upload', {
+      const response = await fetch('https://simple-production-a80a.up.railway.app/upload', {
         method: 'POST',
         body: formData,
       });

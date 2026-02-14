@@ -6,9 +6,12 @@ import fs from 'fs';
 import { SpeechClient } from '@google-cloud/speech';
 import { Translate } from '@google-cloud/translate/build/src/v2';
 import { TextToSpeechClient } from '@google-cloud/text-to-speech';
+import cors from 'cors';
 
 const app = express();
 const port = 3000;
+
+app.use(cors());
 
 // Set up multer for file uploads
 const storage = multer.diskStorage({
