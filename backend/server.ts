@@ -1,158 +1,85 @@
-import express from 'express';
-import multer from 'multer';
-import path from 'path';
-import ffmpeg from 'fluent-ffmpeg';
-import fs from 'fs';
-import cors from 'cors';
+import express from "express";
+import cors from "cors";
+import multer from "multer";
+import fs from "fs";
+import path from "path";
 
-import { SpeechClient } from '@google-cloud/speech';
-import { Translate } from '@google-cloud/translate/build/src/v2';
-import { TextToSpeechClient } from '@google-cloud/text-to-speech';
+import { SpeechClient } from "@google-cloud/speech";
+import { Translate } from "@google-cloud/translate/build/src/v2";
+import { TextToSpeechClient } from "@google-cloud/text-to-speech";
 
 const app = express();
-const port = process.env.PORT || 3000;
-app.listen(port);
+const upload = multer({ dest: "uploads/" });
 
-ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
-
-['uploads', 'temp', 'output'].forEach(dir => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-});
-
-app.use(cors({
-  origin: "*",
-  methods: ["GET","POST"],
-  allowedHeaders: ["Content-Type"]
-}));
+app.use(cors());
 app.use(express.json());
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, 'video-' + Date.now() + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({
-  storage,
-  limits: {
-    fileSize: 30 * 1024 * 1024 // Cloud Run 안전용 (30MB)
-  }
-});
-
+// ✅ Cloud Run → key.json 필요 없음
 const speechClient = new SpeechClient();
 const translateClient = new Translate();
 const ttsClient = new TextToSpeechClient();
 
-app.post('/upload', upload.single('video'), async (req, res) => {
-  try {
+app.get("/", (req, res) => {
+  res.send("Server OK");
+});
 
+app.post("/upload", upload.single("file"), async (req, res) => {
+  try {
     if (!req.file) {
-      return res.status(400).send('파일 없음');
+      return res.status(400).json({ error: "No file uploaded" });
     }
 
-    const videoPath = req.file.path;
-    const baseName = path.parse(req.file.filename).name;
-    const audioPath = `temp/${baseName}.mp3`;
-    const translatedAudioPath = `temp/${baseName}-translated.mp3`;
-    const outputVideoPath = `output/${baseName}-dubbed.mp4`;
+    const filePath = path.join(__dirname, "..", req.file.path);
+    const audioBytes = fs.readFileSync(filePath).toString("base64");
 
-    const targetLang = req.body.lang || 'ko';
-
-    await new Promise((resolve, reject) => {
-      ffmpeg(videoPath)
-        .output(audioPath)
-        .audioFrequency(16000)
-        .on('end', resolve)
-        .on('error', reject)
-        .run();
-    });
-
-    console.log('오디오 추출 완료');
-
-    const audioBytes = fs.readFileSync(audioPath).toString('base64');
-
-    const [sttRes] = await speechClient.recognize({
+    // ✅ 1. Speech to Text
+    const [speechResponse] = await speechClient.recognize({
       audio: { content: audioBytes },
       config: {
-        encoding: 'MP3',
-        sampleRateHertz: 16000,
-        languageCode: 'en-US'
-      }
+        encoding: "WEBM_OPUS",
+        sampleRateHertz: 48000,
+        languageCode: "ko-KR",
+      },
     });
 
-    const transcript = sttRes.results
-      ?.map(r => r.alternatives?.[0]?.transcript)
-      .join('\n');
+    const text =
+      speechResponse.results
+        ?.map(r => r.alternatives?.[0]?.transcript)
+        .join(" ") || "";
 
-    if (!transcript) throw new Error('STT 실패');
+    // ✅ 2. Translate
+    const [translated] = await translateClient.translate(text, "en");
 
-    console.log('텍스트:', transcript);
-
-
-    const [translated] = await translateClient.translate(
-      transcript,
-      targetLang
-    );
-
-    console.log('번역:', translated);
-
-
-    const [ttsRes] = await ttsClient.synthesizeSpeech({
+    // ✅ 3. Text To Speech
+    const [ttsResponse] = await ttsClient.synthesizeSpeech({
       input: { text: translated },
       voice: {
-        languageCode: targetLang,
-        ssmlGender: 'NEUTRAL'
+        languageCode: "en-US",
+        ssmlGender: "NEUTRAL",
       },
       audioConfig: {
-        audioEncoding: 'MP3'
-      }
+        audioEncoding: "MP3",
+      },
     });
 
-    fs.writeFileSync(
-      translatedAudioPath,
-      ttsRes.audioContent as Uint8Array,
-      'binary'
-    );
-
-    console.log('TTS 완료');
-
-
-    await new Promise((resolve, reject) => {
-      ffmpeg(videoPath)
-        .addInput(translatedAudioPath)
-        .outputOptions([
-          '-map 0:v',
-          '-map 1:a',
-          '-c:v copy',
-          '-c:a aac'
-        ])
-        .save(outputVideoPath)
-        .on('end', resolve)
-        .on('error', reject);
-    });
-
-    console.log('더빙 완료');
+    const outputFile = `output-${Date.now()}.mp3`;
+    fs.writeFileSync(outputFile, ttsResponse.audioContent as Buffer);
 
     res.json({
-      success: true,
-      url: `/output/${path.basename(outputVideoPath)}`
+      original: text,
+      translated,
+      audioFile: outputFile,
     });
 
+    fs.unlinkSync(filePath);
   } catch (err) {
     console.error(err);
-    res.status(500).send('처리 실패');
+    res.status(500).json({ error: "Processing failed" });
   }
 });
 
+const PORT = process.env.PORT || 8080;
 
-app.use('/output', express.static('output'));
-
-
-app.listen(port, () => {
-  console.log(`Server running on ${port}`);
+app.listen(PORT, () => {
+  console.log("Server running on", PORT);
 });

@@ -1,7 +1,5 @@
 FROM node:20
 
-RUN apt-get update && apt-get install -y ffmpeg
-
 WORKDIR /app
 
 COPY package*.json ./
@@ -11,6 +9,6 @@ COPY . .
 
 RUN npm run build
 
-EXPOSE 3000
+EXPOSE 8080
 
-CMD ["node","dist/server.js"]
+CMD ["npm", "start"]
