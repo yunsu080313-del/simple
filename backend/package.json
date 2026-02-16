@@ -4,7 +4,7 @@
     "private": true,
     "scripts": {
         "start": "node dist/server.js",
-        "dev": "ts-node server.ts",
+        "dev": "GOOGLE_APPLICATION_CREDENTIALS=key.json ts-node server.ts",
         "build": "tsc"
     },
     "dependencies": {
@@ -23,6 +23,6 @@
         "@types/multer": "^2.0.0",
         "@types/node": "^25.2.3",
         "ts-node": "^10.9.2",
-        "typescript": "^5.9.3"
+        "typescript": "^5.5.2"
     }
 }
