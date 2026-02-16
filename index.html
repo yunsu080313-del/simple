@@ -26,10 +26,10 @@ async function upload() {
   formData.append("video", file);
   formData.append("lang", lang);
 
-  const res = await fetch("/api/dub", {
-    method: "POST",
-    body: formData
-  });
+  const res = await fetch("https://video-dub-786666752798.asia-northeast3.run.app/upload", {
+  method: "POST",
+  body: formData
+});
 
   const blob = await res.blob();
   document.getElementById("result").src = URL.createObjectURL(blob);

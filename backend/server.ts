@@ -11,6 +11,7 @@ import { TextToSpeechClient } from '@google-cloud/text-to-speech';
 
 const app = express();
 const port = process.env.PORT || 3000;
+app.listen(port);
 
 ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
 
@@ -20,7 +21,11 @@ ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
   }
 });
 
-app.use(cors());
+app.use(cors({
+  origin: "*",
+  methods: ["GET","POST"],
+  allowedHeaders: ["Content-Type"]
+}));
 app.use(express.json());
 
 const storage = multer.diskStorage({
